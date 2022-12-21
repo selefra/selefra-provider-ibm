@@ -11,7 +11,7 @@ v0.0.1
 # Install 
 
 ```
-selefre  provider install ibm
+selefra provider install ibm
 ```
 
 
