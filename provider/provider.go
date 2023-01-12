@@ -6,6 +6,8 @@ import (
 	"github.com/selefra/selefra-provider-sdk/provider"
 	"github.com/selefra/selefra-provider-sdk/provider/schema"
 	"github.com/spf13/viper"
+	"os"
+	"strings"
 )
 
 const Version = "v0.0.1"
@@ -26,6 +28,30 @@ func GetProvider() *provider.Provider {
 
 				if len(ibmConfig.Providers) == 0 {
 					ibmConfig.Providers = append(ibmConfig.Providers, ibm_client.Config{})
+				}
+
+				if ibmConfig.Providers[0].APIKey == "" {
+					ibmConfig.Providers[0].APIKey = os.Getenv("IBM_API_KEY")
+				}
+
+				if ibmConfig.Providers[0].APIKey == "" {
+					return nil, schema.NewDiagnostics().AddErrorMsg("missing api_key in configuration")
+				}
+
+				if len(ibmConfig.Providers[0].Regions) == 0 {
+					regionData := os.Getenv("IBM_REGIONS")
+
+					var regionList []string
+
+					if regionData != "" {
+						regionList = strings.Split(regionData, ",")
+					}
+
+					ibmConfig.Providers[0].Regions = regionList
+				}
+
+				if len(ibmConfig.Providers[0].Regions) == 0 {
+					return nil, schema.NewDiagnostics().AddErrorMsg("missing regions in configuration")
 				}
 
 				clients, err := ibm_client.NewClients(ibmConfig)
@@ -50,7 +76,7 @@ func GetProvider() *provider.Provider {
 			GetDefaultConfigTemplate: func(ctx context.Context) string {
 				return `# api_key: "<YOUR_API_KEY>"
 # regions:
-#   - "us-south"`
+#   - us-south`
 			},
 			Validation: func(ctx context.Context, config *viper.Viper) *schema.Diagnostics {
 				var client_config ibm_client.Configs
@@ -58,10 +84,6 @@ func GetProvider() *provider.Provider {
 
 				if err != nil {
 					return schema.NewDiagnostics().AddErrorMsg("analysis config err: %s", err.Error())
-				}
-
-				if len(client_config.Providers) == 0 {
-					return schema.NewDiagnostics().AddErrorMsg("analysis config err: no configuration")
 				}
 
 				return nil

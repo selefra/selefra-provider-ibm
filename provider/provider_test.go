@@ -17,11 +17,7 @@ import (
 func TestProvider_PullTable(t *testing.T) {
 	os.Setenv("SELEFRA_DATABASE_DSN", "host=127.0.0.1 user=postgres password=password port=5432 dbname=postgres sslmode=disable")
 	wk := "."
-	config := `
-api_key: "<YOUR_API_KEY>"
-regions:
-  - "us-south"
-`
+	config := ``
 	myProvider := GetProvider()
 	Pull(myProvider, config, wk, "*")
 }
